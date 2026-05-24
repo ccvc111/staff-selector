@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>选择员工 - 员工选择系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .filters {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .search-box::before {
+            content: "🔍";
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+        }
+
+        .price-filter {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .price-filter select {
+            border: none;
+            font-size: 1rem;
+            outline: none;
+            cursor: pointer;
+            background: transparent;
+        }
+
+        .staff-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .staff-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .staff-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .staff-card.offline {
+            opacity: 0.6;
+        }
+
+        .photo-container {
+            position: relative;
+            height: 300px;
+            overflow: hidden;
+        }
+
+        .photo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .staff-card:hover .photo-container img {
+            transform: scale(1.05);
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .status-badge.online {
+            background: #4CAF50;
+        }
+
+        .status-badge.offline {
+            background: #f44336;
+        }
+
+        .status-badge.rest {
+            background: #FF9800;
+        }
+
+        .staff-info {
+            padding: 20px;
+        }
+
+        .staff-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .staff-price {
+            font-size: 1.5rem;
+            color: #e91e63;
+            font-weight: bold;
+        }
+
+        .staff-price span {
+            font-size: 0.9rem;
+            color: #999;
+            font-weight: normal;
+        }
+
+        .staff-tags {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            background: #f0f0f0;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.2rem;
+            }
+
+            .staff-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 15px;
+                padding: 15px;
+            }
+
+            .photo-container {
+                height: 200px;
+            }
+
+            .staff-info {
+                padding: 15px;
+            }
+
+            .staff-name {
+                font-size: 1rem;
+            }
+
+            .staff-price {
+                font-size: 1.2rem;
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0,0,0,0.5);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            z-index: 10;
+        }
+
+        .modal-photo {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+        }
+
+        .modal-info {
+            padding: 30px;
+        }
+
+        .modal-info h2 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+
+        .modal-info .price {
+            font-size: 2rem;
+            color: #e91e63;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .modal-info .description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .modal-info .status {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .select-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-size: 1.1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .select-btn:hover {
+            transform: scale(1.02);
+        }
+
+        .select-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>🎯 选择员工</h1>
+            <button class="back-btn" onclick="location.href='index.html'">← 返回首页</button>
+        </div>
+    </div>
+
+    <div class="filters">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="搜索员工姓名...">
+        </div>
+        <div class="price-filter">
+            <label>价格范围：</label>
+            <select id="priceFilter">
+                <option value="all">全部价格</option>
+                <option value="0-100">¥0 - ¥100</option>
+                <option value="100-200">¥100 - ¥200</option>
+                <option value="200-300">¥200 - ¥300</option>
+                <option value="300+">¥300以上</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="staff-grid" id="staffGrid">
+        <!-- 员工卡片将在这里动态生成 -->
+    </div>
+
+    <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="icon">😕</div>
+        <h3>没有找到匹配的员工</h3>
+        <p>请尝试其他搜索条件</p>
+    </div>
+
+    <div class="modal" id="staffModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <img class="modal-photo" id="modalPhoto" src="" alt="">
+            <div class="modal-info">
+                <h2 id="modalName"></h2>
+                <div class="price" id="modalPrice"></div>
+                <div class="description" id="modalDescription"></div>
+                <span class="status" id="modalStatus"></span>
+                <button class="select-btn" id="selectBtn">选择这位员工</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 从localStorage获取员工数据
+        function getStaffData() {
+            const data = localStorage.getItem('staffData');
+            return data ? JSON.parse(data) : [];
+        }
+
+        // 渲染员工列表
+        function renderStaff(staffList) {
+            const grid = document.getElementById('staffGrid');
+            const emptyState = document.getElementById('emptyState');
+
+            if (staffList.length === 0) {
+                grid.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            grid.innerHTML = staffList.map(staff => `
+                <div class="staff-card ${staff.status !== 'online' ? 'offline' : ''}" onclick="openModal(${staff.id})">
+                    <div class="photo-container">
+                        <img src="${staff.photo || 'https://via.placeholder.com/300x400?text=No+Photo'}" alt="${staff.name}">
+                        <span class="status-badge ${staff.status}">
+                            ${staff.status === 'online' ? '在线' : staff.status === 'rest' ? '休息中' : '离线'}
+                        </span>
+                    </div>
+                    <div class="staff-info">
+                        <div class="staff-name">${staff.name}</div>
+                        <div class="staff-price">¥${staff.price} <span>/小时</span></div>
+                        <div class="staff-tags">
+                            ${staff.tags ? staff.tags.map(tag => `<span class="tag">${tag}</span>`).join('') : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 筛选员工
+        function filterStaff() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const priceRange = document.getElementById('priceFilter').value;
+            let staffList = getStaffData();
+
+            // 搜索筛选
+            if (searchTerm) {
+                staffList = staffList.filter(staff => 
+                    staff.name.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // 价格筛选
+            if (priceRange !== 'all') {
+                staffList = staffList.filter(staff => {
+                    const price = parseFloat(staff.price);
+                    switch(priceRange) {
+                        case '0-100': return price >= 0 && price <= 100;
+                        case '100-200': return price > 100 && price <= 200;
+                        case '200-300': return price > 200 && price <= 300;
+                        case '300+': return price > 300;
+                        default: return true;
+                    }
+                });
+            }
+
+            renderStaff(staffList);
+        }
+
+        // 打开详情弹窗
+        function openModal(staffId) {
+            const staff = getStaffData().find(s => s.id === staffId);
+            if (!staff) return;
+
+            document.getElementById('modalPhoto').src = staff.photo || 'https://via.placeholder.com/500x400?text=No+Photo';
+            document.getElementById('modalName').textContent = staff.name;
+            document.getElementById('modalPrice').textContent = `¥${staff.price}/小时`;
+            document.getElementById('modalDescription').textContent = staff.description || '暂无描述';
+            
+            const statusEl = document.getElementById('modalStatus');
+            statusEl.textContent = staff.status === 'online' ? '在线' : staff.status === 'rest' ? '休息中' : '离线';
+            statusEl.className = 'status ' + staff.status;
+
+            const selectBtn = document.getElementById('selectBtn');
+            if (staff.status !== 'online') {
+                selectBtn.disabled = true;
+                selectBtn.textContent = '该员工当前不可用';
+            } else {
+                selectBtn.disabled = false;
+                selectBtn.textContent = '选择这位员工';
+                selectBtn.onclick = () => {
+                    alert(`您选择了 ${staff.name}！`);
+                    closeModal();
+                };
+            }
+
+            document.getElementById('staffModal').classList.add('active');
+        }
+
+        // 关闭弹窗
+        function closeModal() {
+            document.getElementById('staffModal').classList.remove('active');
+        }
+
+        // 事件监听
+        document.getElementById('searchInput').addEventListener('input', filterStaff);
+        document.getElementById('priceFilter').addEventListener('change', filterStaff);
+
+        // 点击弹窗外部关闭
+        document.getElementById('staffModal').addEventListener('click', (e) => {
+            if (e.target.id === 'staffModal') closeModal();
+        });
+
+        // 初始化
+        renderStaff(getStaffData());
+
+        // 添加示例数据（如果没有数据）
+        if (getStaffData().length === 0) {
+            const sampleData = [
+                { id: 1, name: '张三', price: 150, status: 'online', photo: 'https://via.placeholder.com/300x400?text=张三', tags: ['专业', '经验丰富'], description: '拥有5年工作经验，专业技能过硬' },
+                { id: 2, name: '李四', price: 200, status: 'rest', photo: 'https://via.placeholder.com/300x400?text=李四', tags: ['热情', '细心'], description: '服务热情周到，深受客户好评' },
+                { id: 3, name: '王五', price: 120, status: 'online', photo: 'https://via.placeholder.com/300x400?text=王五', tags: ['新手', '勤奋'], description: '虽然经验不多，但学习能力强' },
+                { id: 4, name: '赵六', price: 300, status: 'offline', photo: 'https://via.placeholder.com/300x400?text=赵六', tags: ['资深', '专家'], description: '行业专家，拥有10年以上经验' }
+            ];
+            localStorage.setItem('staffData', JSON.stringify(sampleData));
+            renderStaff(sampleData);
+        }
+    </script>
+</body>
+</html>
